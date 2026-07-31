@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --primary-light: #ff758c;
+            --primary-dark: #c9184a;
+            --bg-gradient: linear-gradient(135deg, #fff0f3 0%, #ffccd5 100%);
+            --text-main: #590d22;
+            --text-muted: #800f2f;
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --shadow: 0 8px 32px rgba(201, 24, 74, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 40px;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            padding: 28px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Hero Section */
+        .hero-img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            border: 4px solid white;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Premium Custom Slider */
+        .slider-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 24px;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            margin: 20px 0 10px 0;
+        }
+
+        .slider-track {
+            position: absolute;
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .slider-fill {
+            position: absolute;
+            height: 12px;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary));
+            border-radius: 10px;
+            left: 0;
+            width: 50%;
+            pointer-events: none;
+            transition: width 0.1s ease-out;
+        }
+
+        .slider-thumb-ui {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(255, 77, 109, 0.4);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            transition: left 0.1s ease-out;
+            z-index: 2;
+        }
+
+        .slider-thumb-ui::after {
+            content: '❤️';
+            font-size: 18px;
+            animation: pulse-heart 2s infinite;
+        }
+
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .slider-bubble {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(255, 77, 109, 0.3);
+            pointer-events: none;
+            transition: left 0.1s ease-out;
+            z-index: 3;
+        }
+
+        .slider-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+
+        input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+            margin: 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0 5px;
+        }
+
+        .dynamic-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-top: 24px;
+            min-height: 36px;
+            transition: all 0.3s ease;
+        }
+
+        .tiny-heart {
+            position: absolute;
+            top: 10px;
+            pointer-events: none;
+            font-size: 16px;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        /* Voice Recorder */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .record-ui-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-top: 24px;
+            min-height: 150px;
+            justify-content: center;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            border-radius: 50px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-record {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 24px rgba(255, 77, 109, 0.4);
+        }
+
+        .btn-record:active {
+            transform: scale(0.95);
+        }
+
+        .btn-record svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .recording-active .btn-record {
+            animation: pulse-mic 1.5s infinite;
+            background: #d90429;
+        }
+
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(217, 4, 41, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(217, 4, 41, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 4, 41, 0); }
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-action {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .btn-action:active {
+            background: white;
+            transform: scale(0.98);
+        }
+
+        .btn-action.stop { color: #d90429; }
+        .btn-action.primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255, 77, 109, 0.3);
+        }
+
+        .audio-player-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        audio {
+            width: 100%;
+            height: 40px;
+            outline: none;
+        }
+        
+        audio::-webkit-media-controls-panel {
+            background-color: transparent;
+        }
+
+        /* View States */
+        .hidden { display: none !important; }
+
+        /* Full Screen Confetti Overlay */
+        #confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .confetti-item {
+            position: absolute;
+            top: -50px;
+            font-size: 24px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Hero Section -->
+        <div class="glass-card">
+            <img src="yourphoto.jpg" alt="Us" class="hero-img">
+            <h1>How much do you love me? ❤️</h1>
+            <p class="subtitle">Be honest...</p>
+        </div>
+
+        <!-- Slider Section -->
+        <div class="glass-card slider-section">
+            <div class="slider-wrapper">
+                <div class="slider-bubble" id="slider-bubble">50</div>
+                <div class="slider-track"></div>
+                <div class="slider-fill" id="slider-fill"></div>
+                <div class="slider-thumb-ui" id="slider-thumb"></div>
+                
+                <input type="range" id="love-slider" min="0" max="101" value="50" step="1">
+            </div>
+            
+            <div class="slider-labels">
+                <span>0</span>
+                <span>100</span>
+                <span>♾️</span>
+            </div>
+
+            <div class="dynamic-text" id="dynamic-text">I'll take it ❤️</div>
+        </div>
+
+        <!-- Voice Recorder Section -->
+        <div class="glass-card">
+            <h2 class="section-title">Do you like it?</h2>
+            <p class="subtitle">If yes, leave me a little voice message ❤️</p>
+
+            <div class="record-ui-wrapper" id="state-idle">
+                <button class="btn btn-record" id="btn-start-record">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+                <p class="subtitle" style="font-size: 0.8rem;">Tap to record</p>
+            </div>
+
+            <div class="record-ui-wrapper hidden recording-active" id="state-recording">
+                <button class="btn btn-record">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+                <div class="timer" id="record-timer">00:00</div>
+                <div class="controls-row">
+                    <button class="btn btn-action stop" id="btn-stop-record">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> Stop
+                    </button>
+                </div>
+            </div>
+
+            <div class="record-ui-wrapper hidden" id="state-recorded">
+                <div class="audio-player-container">
+                    <audio id="audio-player" controls></audio>
+                </div>
+                <div class="controls-row">
+                    <button class="btn btn-action" id="btn-delete-record">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
+                    </button>
+                    <button class="btn btn-action primary" id="btn-share-record">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confetti-container"></div>
+
+    <script>
+        // --- Slider Logic ---
+        const slider = document.getElementById('love-slider');
+        const fill = document.getElementById('slider-fill');
+        const thumb = document.getElementById('slider-thumb');
+        const bubble = document.getElementById('slider-bubble');
+        const dynamicText = document.getElementById('dynamic-text');
+        const sliderWrapper = document.querySelector('.slider-wrapper');
+        
+        const tickSound = new Audio('tick.mp3');
+        tickSound.volume = 0.4;
+        
+        let lastVal = parseInt(slider.value);
+        let lastHeartTime = 0;
+        let confettiTriggered = false;
+
+        function updateSliderUI(val) {
+            // max slider is 101, visually mapped 0-100 and then 101=infinity
+            const percent = (val / 101) * 100;
+            fill.style.width = `${percent}%`;
+            thumb.style.left = `${percent}%`;
+            bubble.style.left = `${percent}%`;
+
+            if (val === 101) {
+                bubble.textContent = '♾️';
+            } else {
+                bubble.textContent = val;
+            }
+
+            if (val <= 25) dynamicText.textContent = "Only that much? 🥺";
+            else if (val <= 50) dynamicText.textContent = "I'll take it ❤️";
+            else if (val <= 75) dynamicText.textContent = "Awww 🥹";
+            else if (val <= 99) dynamicText.textContent = "That's a lot ❤️";
+            else if (val === 100) dynamicText.textContent = "Really? ❤️";
+            else {
+                dynamicText.textContent = "I knew it. Infinity forever ♾️❤️";
+                triggerInfinityConfetti();
+            }
+        }
+
+        function triggerInfinityConfetti() {
+            if (confettiTriggered) return;
+            confettiTriggered = true;
+            const container = document.getElementById('confetti-container');
+            const items = ['❤️', '💖', '✨', '💕', '🥰'];
+            
+            for(let i=0; i<40; i++) {
+                const el = document.createElement('div');
+                el.innerHTML = items[Math.floor(Math.random() * items.length)];
+                el.className = 'confetti-item';
+                el.style.left = (Math.random() * 100) + 'vw';
+                el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                el.style.animationDelay = (Math.random() * 0.5) + 's';
+                el.style.fontSize = (Math.random() * 14 + 16) + 'px';
+                container.appendChild(el);
+                
+                setTimeout(() => el.remove(), 5000);
+            }
+            
+            setTimeout(() => { confettiTriggered = false; }, 5000);
+        }
+
+        slider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            updateSliderUI(val);
+
+            // Audio and Haptics
+            if (val !== lastVal) {
+                tickSound.currentTime = 0;
+                tickSound.play().catch(() => {}); // Catch autoplay restrictions silently
+                if (navigator.vibrate) navigator.vibrate(5);
+                lastVal = val;
+            }
+
+            // Floating hearts while dragging
+            const now = Date.now();
+            if (now - lastHeartTime > 60) {
+                lastHeartTime = now;
+                const heart = document.createElement('div');
+                heart.innerHTML = '💖';
+                heart.className = 'tiny-heart';
+                const percent = (val / 101) * 100;
+                heart.style.left = `calc(${percent}% - 8px)`;
+                sliderWrapper.appendChild(heart);
+                setTimeout(() => heart.remove(), 1000);
+            }
+        });
+
+        // Initialize slider on load
+        updateSliderUI(parseInt(slider.value));
+
+
+        // --- Voice Recorder Logic ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob = null;
+        let timerInterval;
+        let seconds = 0;
+
+        const stateIdle = document.getElementById('state-idle');
+        const stateRecording = document.getElementById('state-recording');
+        const stateRecorded = document.getElementById('state-recorded');
+        
+        const btnStart = document.getElementById('btn-start-record');
+        const btnStop = document.getElementById('btn-stop-record');
+        const btnDelete = document.getElementById('btn-delete-record');
+        const btnShare = document.getElementById('btn-share-record');
+        const timerDisplay = document.getElementById('record-timer');
+        const audioPlayer = document.getElementById('audio-player');
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function switchState(state) {
+            stateIdle.classList.add('hidden');
+            stateRecording.classList.add('hidden');
+            stateRecorded.classList.add('hidden');
+            
+            if (state === 'idle') stateIdle.classList.remove('hidden');
+            if (state === 'recording') stateRecording.classList.remove('hidden');
+            if (state === 'recorded') stateRecorded.classList.remove('hidden');
+        }
+
+        btnStart.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = e => {
+                    if(e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioPlayer.src = URL.createObjectURL(audioBlob);
+                    switchState('recorded');
+                };
+
+                mediaRecorder.start();
+                switchState('recording');
+                
+                // Timer
+                seconds = 0;
+                timerDisplay.textContent = "00:00";
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    timerDisplay.textContent = formatTime(seconds);
+                }, 1000);
+
+            } catch (err) {
+                alert("Please allow microphone access to leave a message ❤️");
+            }
+        };
+
+        btnStop.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                clearInterval(timerInterval);
+            }
+        };
+
+        btnDelete.onclick = () => {
+            audioBlob = null;
+            audioPlayer.src = '';
+            switchState('idle');
+        };
+
+        btnShare.onclick = async () => {
+            if (!audioBlob) return;
+            
+            const val = parseInt(slider.value);
+            const fileNameBase = val === 101 ? '∞' : val;
+            const file = new File([audioBlob], `${fileNameBase}.webm`, { type: 'audio/webm' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'My Answer',
+                        text: "Here's my answer ❤️"
+                    });
+                } catch (error) {
+                    // User dismissed share sheet or failed
+                    console.log('Share error:', error);
+                }
+            } else {
+                alert("Your device doesn't support direct file sharing here 🥺. You can download it instead!");
+                // Fallback to download
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(file);
+                a.download = `${fileNameBase}.webm`;
+                a.click();
+            }
+        };
+
+    </script>
+</body>
+</html>
