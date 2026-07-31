@@ -81,7 +81,7 @@
             font-weight: 500;
         }
 
-        /* Premium Custom Slider */
+        /* Custom Slider */
         .slider-section {
             display: flex;
             flex-direction: column;
@@ -333,10 +333,8 @@
             background-color: transparent;
         }
 
-        /* View States */
         .hidden { display: none !important; }
 
-        /* Full Screen Confetti Overlay */
         #confetti-container {
             position: fixed;
             top: 0;
@@ -449,7 +447,6 @@
         let confettiTriggered = false;
 
         function updateSliderUI(val) {
-            // max slider is 101, visually mapped 0-100 and then 101=infinity
             const percent = (val / 101) * 100;
             fill.style.width = `${percent}%`;
             thumb.style.left = `${percent}%`;
@@ -498,15 +495,13 @@
             const val = parseInt(e.target.value);
             updateSliderUI(val);
 
-            // Audio and Haptics
             if (val !== lastVal) {
                 tickSound.currentTime = 0;
-                tickSound.play().catch(() => {}); // Catch autoplay restrictions silently
+                tickSound.play().catch(() => {});
                 if (navigator.vibrate) navigator.vibrate(5);
                 lastVal = val;
             }
 
-            // Floating hearts while dragging
             const now = Date.now();
             if (now - lastHeartTime > 60) {
                 lastHeartTime = now;
@@ -520,8 +515,26 @@
             }
         });
 
-        // Initialize slider on load
         updateSliderUI(parseInt(slider.value));
+
+
+        // --- Get Mobile-Compatible Audio Types ---
+        function getSupportedMimeType() {
+            const types = [
+                { mime: 'audio/mp4', ext: 'm4a' },
+                { mime: 'audio/aac', ext: 'aac' },
+                { mime: 'audio/ogg;codecs=opus', ext: 'ogg' },
+                { mime: 'audio/webm;codecs=opus', ext: 'webm' },
+                { mime: 'audio/webm', ext: 'webm' }
+            ];
+
+            for (let t of types) {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t.mime)) {
+                    return t;
+                }
+            }
+            return { mime: '', ext: 'm4a' };
+        }
 
 
         // --- Voice Recorder Logic ---
@@ -530,6 +543,7 @@
         let audioBlob = null;
         let timerInterval;
         let seconds = 0;
+        let selectedAudioFormat = getSupportedMimeType();
 
         const stateIdle = document.getElementById('state-idle');
         const stateRecording = document.getElementById('state-recording');
@@ -559,9 +573,17 @@
         }
 
         btnStart.onclick = async () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Microphone access requires HTTPS!");
+                return;
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                selectedAudioFormat = getSupportedMimeType();
+
+                const options = selectedAudioFormat.mime ? { mimeType: selectedAudioFormat.mime } : {};
+                mediaRecorder = new MediaRecorder(stream, options);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = e => {
@@ -569,7 +591,8 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const finalType = mediaRecorder.mimeType || selectedAudioFormat.mime || 'audio/mp4';
+                    audioBlob = new Blob(audioChunks, { type: finalType });
                     audioPlayer.src = URL.createObjectURL(audioBlob);
                     switchState('recorded');
                 };
@@ -577,7 +600,6 @@
                 mediaRecorder.start();
                 switchState('recording');
                 
-                // Timer
                 seconds = 0;
                 timerDisplay.textContent = "00:00";
                 timerInterval = setInterval(() => {
@@ -586,7 +608,8 @@
                 }, 1000);
 
             } catch (err) {
-                alert("Please allow microphone access to leave a message ❤️");
+                console.error(err);
+                alert("Could not access microphone ❤️");
             }
         };
 
@@ -605,47 +628,44 @@
         };
 
         btnShare.onclick = async () => {
-    if (!audioBlob) return;
-    
-    const val = parseInt(slider.value);
-    
-    // 1. Use 'Infinity' instead of '∞' in filename so Android/iOS OS doesn't reject the file
-    const safeFileNameVal = val === 101 ? 'Infinity' : val;
-    const extension = selectedAudioFormat.ext || 'm4a';
-    const fileName = `${safeFileNameVal}.${extension}`;
+            if (!audioBlob) return;
+            
+            const val = parseInt(slider.value);
+            
+            // Clean filename to prevent OS share sheet rejection
+            const safeFileNameVal = val === 101 ? 'Infinity' : val;
+            const extension = selectedAudioFormat.ext || 'm4a';
+            const fileName = `${safeFileNameVal}.${extension}`;
 
-    const fileType = audioBlob.type || 'audio/mp4';
-    const file = new File([audioBlob], fileName, { type: fileType });
+            const fileType = audioBlob.type || 'audio/mp4';
+            const file = new File([audioBlob], fileName, { type: fileType });
 
-    // 2. Try native mobile share sheet
-    if (navigator.share) {
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'My Answer',
-                    text: "Here's my answer ❤️"
-                });
-                return; // Share panel opened successfully
-            } catch (error) {
-                // If user cancels the share sheet, ignore the error gracefully
-                if (error.name === 'AbortError') return;
-                console.error('Share error:', error);
+            // Trigger Share Sheet
+            if (navigator.share) {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'My Answer',
+                            text: "Here's my answer ❤️"
+                        });
+                        return;
+                    } catch (error) {
+                        if (error.name === 'AbortError') return;
+                        console.error('Share error:', error);
+                    }
+                }
             }
-        }
-    }
 
-    // 3. Fallback for Desktop browsers or unsupported in-app webviews
-    alert("Your browser doesn't support direct file sharing. Downloading the audio file for you instead! ❤️");
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-};
-
-
+            // Fallback for Desktop / In-App Browsers
+            alert("Direct file sharing isn't supported on this browser. Downloading file instead! ❤️");
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
     </script>
 </body>
 </html>
