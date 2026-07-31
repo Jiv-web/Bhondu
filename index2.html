@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>For You ❤️</title>
+    <title>How Much Do You Love Me? ❤️</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -81,7 +81,7 @@
             font-weight: 500;
         }
 
-        /* Premium Custom Slider */
+        /* Custom Apple-Style Slider */
         .slider-section {
             display: flex;
             flex-direction: column;
@@ -328,15 +328,10 @@
             height: 40px;
             outline: none;
         }
-        
-        audio::-webkit-media-controls-panel {
-            background-color: transparent;
-        }
 
-        /* View States */
         .hidden { display: none !important; }
 
-        /* Full Screen Confetti Overlay */
+        /* Confetti Overlay */
         #confetti-container {
             position: fixed;
             top: 0;
@@ -449,7 +444,6 @@
         let confettiTriggered = false;
 
         function updateSliderUI(val) {
-            // max slider is 101, visually mapped 0-100 and then 101=infinity
             const percent = (val / 101) * 100;
             fill.style.width = `${percent}%`;
             thumb.style.left = `${percent}%`;
@@ -498,15 +492,13 @@
             const val = parseInt(e.target.value);
             updateSliderUI(val);
 
-            // Audio and Haptics
             if (val !== lastVal) {
                 tickSound.currentTime = 0;
-                tickSound.play().catch(() => {}); // Catch autoplay restrictions silently
+                tickSound.play().catch(() => {});
                 if (navigator.vibrate) navigator.vibrate(5);
                 lastVal = val;
             }
 
-            // Floating hearts while dragging
             const now = Date.now();
             if (now - lastHeartTime > 60) {
                 lastHeartTime = now;
@@ -520,8 +512,26 @@
             }
         });
 
-        // Initialize slider on load
         updateSliderUI(parseInt(slider.value));
+
+
+        // --- Audio Helper for WhatsApp Compatibility ---
+        function getSupportedMimeType() {
+            const types = [
+                { mime: 'audio/mp4', ext: 'm4a' },
+                { mime: 'audio/aac', ext: 'aac' },
+                { mime: 'audio/ogg;codecs=opus', ext: 'ogg' },
+                { mime: 'audio/webm;codecs=opus', ext: 'webm' },
+                { mime: 'audio/webm', ext: 'webm' }
+            ];
+
+            for (let t of types) {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t.mime)) {
+                    return t;
+                }
+            }
+            return { mime: '', ext: 'm4a' };
+        }
 
 
         // --- Voice Recorder Logic ---
@@ -530,6 +540,7 @@
         let audioBlob = null;
         let timerInterval;
         let seconds = 0;
+        let selectedAudioFormat = getSupportedMimeType();
 
         const stateIdle = document.getElementById('state-idle');
         const stateRecording = document.getElementById('state-recording');
@@ -559,9 +570,17 @@
         }
 
         btnStart.onclick = async () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Microphone access requires HTTPS or localhost! If testing locally, deploy to GitHub Pages or Vercel ❤️");
+                return;
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                selectedAudioFormat = getSupportedMimeType();
+
+                const options = selectedAudioFormat.mime ? { mimeType: selectedAudioFormat.mime } : {};
+                mediaRecorder = new MediaRecorder(stream, options);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = e => {
@@ -569,7 +588,8 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const finalType = mediaRecorder.mimeType || selectedAudioFormat.mime || 'audio/mp4';
+                    audioBlob = new Blob(audioChunks, { type: finalType });
                     audioPlayer.src = URL.createObjectURL(audioBlob);
                     switchState('recorded');
                 };
@@ -577,7 +597,6 @@
                 mediaRecorder.start();
                 switchState('recording');
                 
-                // Timer
                 seconds = 0;
                 timerDisplay.textContent = "00:00";
                 timerInterval = setInterval(() => {
@@ -586,7 +605,8 @@
                 }, 1000);
 
             } catch (err) {
-                alert("Please allow microphone access to leave a message ❤️");
+                console.error(err);
+                alert("Could not access microphone. Please grant permission in browser settings ❤️");
             }
         };
 
@@ -608,8 +628,11 @@
             if (!audioBlob) return;
             
             const val = parseInt(slider.value);
-            const fileNameBase = val === 101 ? '∞' : val;
-            const file = new File([audioBlob], `${fileNameBase}.webm`, { type: 'audio/webm' });
+            const fileNameVal = val === 101 ? '∞' : val;
+            const extension = selectedAudioFormat.ext;
+            const fileName = `${fileNameVal}.${extension}`;
+
+            const file = new File([audioBlob], fileName, { type: audioBlob.type || 'audio/mp4' });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
@@ -619,19 +642,16 @@
                         text: "Here's my answer ❤️"
                     });
                 } catch (error) {
-                    // User dismissed share sheet or failed
                     console.log('Share error:', error);
                 }
             } else {
-                alert("Your device doesn't support direct file sharing here 🥺. You can download it instead!");
-                // Fallback to download
+                alert("Direct file sharing isn't supported here. Downloading the audio file instead!");
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(file);
-                a.download = `${fileNameBase}.webm`;
+                a.download = fileName;
                 a.click();
             }
         };
-
     </script>
 </body>
 </html>
